@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
 module Database.JSONStore where
 
 import System.IO
@@ -48,10 +49,9 @@ get s k = do
 getSubKeys :: Settings -> JSONKey -> IO [JSONKey]
 getSubKeys s k = do
     (man, _) <- loadManifest s k
-    let ks = allKeys man
     return $ do
-        sk <- ks
-        return (ks ++ [sk])
+        sk <- allKeys man
+        return (k ++ [sk])
 
 getRevisions :: FromJSON a => Settings -> JSONKey -> IO [a]
 getRevisions s k = do
@@ -66,10 +66,14 @@ getRevisions s k = do
     return (catMaybes res)
 
 getAttachments :: Settings -> JSONKey -> IO [(AttachmentClass, AttachRef)]
-getAttachments = undefined
+getAttachments = allAttachments
 
-getAttachmentData :: AttachRef -> IO (Maybe LB.ByteString)
-getAttachmentData = undefined
+getAttachmentData :: Settings -> AttachRef -> IO (Maybe LB.ByteString)
+getAttachmentData s ar = attachRefFile s ar >>= \case
+    Nothing -> return Nothing
+    Just path -> LB.readFile path >>= return . Just
+
+
 
 getAttachmentRevisions :: AttachRef -> IO [AttachRef]
 getAttachmentRevisions = undefined

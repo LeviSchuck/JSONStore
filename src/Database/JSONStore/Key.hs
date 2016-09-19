@@ -7,4 +7,4 @@ type Key = T.Text
 type JSONKey = [Key]
 type AttachmentKey = Key
 type AttachmentClass = T.Text
-type AttachRef = FS.FilePath
+type AttachRef = (JSONKey, AttachmentClass, AttachmentKey, Int)

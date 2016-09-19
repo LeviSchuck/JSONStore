@@ -102,6 +102,35 @@ allDocuments s k Manifest{..} = do
     let dp = T.unpack doc
     return (p </> dp)
 
+
+allAttachments :: Settings -> JSONKey -> IO [(AttachmentClass, AttachRef)]
+allAttachments s k = do
+    (man,_) <- loadManifest s k
+    return $ do
+        (cl,ks) <- M.toList (manifestAttachments man)
+        ak <- M.keys ks
+        let lastRev = case M.lookup ak ks of
+                Nothing -> 0
+                Just revs -> V.length revs - 1
+        return (cl, (k, cl, ak, lastRev))
+
+attachRefFile :: Settings -> AttachRef ->IO (Maybe FS.FilePath)
+attachRefFile s (k, cl, ak, rev) = do
+    (man, _) <- loadManifest s k
+    case M.lookup cl (manifestAttachments man) of
+        Nothing -> return Nothing
+        Just ks -> case M.lookup ak ks of
+            Nothing -> return Nothing
+            Just revs -> case revs V.!? rev of
+                Nothing -> return Nothing
+                Just revfile -> do
+                    let path = makePath s k </> (T.unpack revfile)
+                    exists <- doesFileExist path
+                    if exists
+                        then return (Just path)
+                        else return Nothing
+
+
 singleAttachment :: AttachmentClass -> AttachmentKey -> T.Text -> Manifest
 singleAttachment c k f = mempty {manifestAttachments = M.singleton c (M.singleton k (V.singleton f))}
 
