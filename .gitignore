@@ -1,0 +1,4 @@
+.cabal*
+cabal.*
+dist
+base
