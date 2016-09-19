@@ -75,7 +75,9 @@ getAttachmentData s ar = attachRefFile s ar >>= \case
 
 
 
-getAttachmentRevisions :: AttachRef -> IO [AttachRef]
-getAttachmentRevisions = undefined
+getAttachmentRevisions :: Settings -> AttachRef -> IO [LB.ByteString]
+getAttachmentRevisions s ar = do
+    revs <- attachmentRevisions s ar
+    forM revs LB.readFile
 
 

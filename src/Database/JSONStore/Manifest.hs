@@ -130,6 +130,21 @@ attachRefFile s (k, cl, ak, rev) = do
                         then return (Just path)
                         else return Nothing
 
+attachmentRevisions :: Settings -> AttachRef -> IO [FS.FilePath]
+attachmentRevisions s (k, cl, ak, rev) = do
+    (man, _) <- loadManifest s k
+    case M.lookup cl (manifestAttachments man) of
+        Nothing -> return []
+        Just ks -> case M.lookup ak ks of
+            Nothing -> return []
+            Just revs -> do
+                res <- forM revs $ \revfile -> do
+                    let path = makePath s k </> (T.unpack revfile)
+                    exists <- doesFileExist path
+                    if exists
+                        then return (Just path)
+                        else return Nothing
+                (return . catMaybes . V.toList) res
 
 singleAttachment :: AttachmentClass -> AttachmentKey -> T.Text -> Manifest
 singleAttachment c k f = mempty {manifestAttachments = M.singleton c (M.singleton k (V.singleton f))}
